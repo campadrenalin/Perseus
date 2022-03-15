@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::rapier::na::Vector2;
 
+// https://github.com/rust-analyzer/rust-analyzer/issues/8654
+fn vec2(x: f32, y: f32) -> Vector2<f32> { [x, y].into() }
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -69,7 +72,7 @@ fn player_movement(
         let x_axis = -(left as i8) + right as i8;
         let y_axis = -(down as i8) + up as i8;
 
-        let mut move_delta = Vector2::new(x_axis as f32, y_axis as f32);
+        let mut move_delta = vec2(x_axis as f32, y_axis as f32);
         if move_delta != Vector2::zeros() {
             move_delta /= move_delta.magnitude() * rapier_parameters.scale;
         }
