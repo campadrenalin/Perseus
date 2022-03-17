@@ -14,26 +14,42 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_startup_system(spawn_camera.system())
         .add_startup_system(spawn_player.system())
         .add_system(player_movement.system())
+        .add_system(print_positions.system())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .run();
+}
+
+#[derive(Debug)]
+enum EntityPrimaryTag {
+    Camera,
+    Player,
+}
+
+#[derive(Component)]
+struct Tag(EntityPrimaryTag);
+
+fn spawn_camera(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
+    // Set config constants
+    rapier_config.gravity = Vector2::zeros();
+    rapier_config.scale = 20.0;
+
+    // Actually spawn camera
+    commands
+        .spawn()
+        .insert_bundle(OrthographicCameraBundle::new_2d())
+        .insert(Tag(EntityPrimaryTag::Camera));
 }
 
 #[derive(Component)]
 struct Player(f32);
 
-fn spawn_player(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
-    // Set gravity to 0 and spawn camera.
-    rapier_config.gravity = Vector2::zeros();
-    commands
-        .spawn()
-        .insert_bundle(OrthographicCameraBundle::new_2d());
-
+fn spawn_player(mut commands: Commands, rapier_config: ResMut<RapierConfiguration>) {
     let sprite_size_x = 40.0;
     let sprite_size_y = 40.0;
 
-    rapier_config.scale = 20.0;
     let collider_size_x = sprite_size_x / rapier_config.scale;
     let collider_size_y = sprite_size_y / rapier_config.scale;
 
@@ -55,7 +71,8 @@ fn spawn_player(mut commands: Commands, mut rapier_config: ResMut<RapierConfigur
         })
         .insert(ColliderPositionSync::Discrete)
         .insert(ColliderDebugRender::with_id(0))
-        .insert(Player(300.0));
+        .insert(Player(300.0))
+        .insert(Tag(EntityPrimaryTag::Player));
 }
 
 fn player_movement(
@@ -78,5 +95,19 @@ fn player_movement(
         }
 
         rb_vels.linvel = move_delta * player.0;
+    }
+}
+
+fn print_positions(
+    keyboard_input: Res<Input<KeyCode>>,
+    entity_info: Query<(&Tag, &Transform)>,
+) {
+    if !keyboard_input.pressed(KeyCode::X) {
+        return
+    }
+    println!(" === Printing positions: === ");
+
+    for (tag, transform) in entity_info.iter() {
+        println!("{:?} {}", tag.0, transform.translation);
     }
 }
