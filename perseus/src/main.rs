@@ -98,6 +98,10 @@ fn spawn_player(
         })
         .insert_bundle(ColliderBundle {
             shape: ColliderShape::cuboid(player_size_x/2.0, player_size_y/2.0).into(),
+            material: ColliderMaterial {
+                restitution: 1.0,
+                ..Default::default()
+            }.into(),
             ..Default::default()
         })
         .insert(ColliderPositionSync::Discrete)
@@ -126,6 +130,7 @@ fn spawn_ball(mut commands: Commands) {
                 linvel: Vec2::new(20.0, 1.0).into(),
                 ..Default::default()
             }.into(),
+            mass_properties: RigidBodyMassPropsFlags::ROTATION_LOCKED.into(),
             ..Default::default()
         })
         .insert_bundle(ColliderBundle {
