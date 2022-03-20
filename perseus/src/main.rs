@@ -2,9 +2,6 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::rapier::na::Vector2;
 
-// https://github.com/rust-analyzer/rust-analyzer/issues/8654
-fn vec2(x: f32, y: f32) -> Vector2<f32> { [x, y].into() }
-
 const RAPIER_SCALE:f32 = 20.0;
 const ARENA_HEIGHT:f32 = 15.0;
 
@@ -102,6 +99,7 @@ fn spawn_player(
             shape: ColliderShape::cuboid(player_size_x/2.0, player_size_y/2.0).into(),
             material: ColliderMaterial {
                 restitution: 1.0,
+                friction: 0.8,
                 ..Default::default()
             }.into(),
             ..Default::default()
@@ -145,6 +143,7 @@ fn spawn_wall(commands: &mut Commands, y: f32) {
             shape: ColliderShape::cuboid(wall_size_x/2.0, wall_size_y/2.0).into(),
             material: ColliderMaterial {
                 restitution: 1.0,
+                friction: 0.0,
                 ..Default::default()
             }.into(),
             ..Default::default()
@@ -185,6 +184,8 @@ fn spawn_ball(mut commands: Commands) {
             shape: ColliderShape::ball(ball_size_x/2.0).into(),
             material: ColliderMaterial {
                 restitution: 1.0,
+                friction: 0.5,
+                friction_combine_rule: CoefficientCombineRule::Min,
                 ..Default::default()
             }.into(),
             ..Default::default()
@@ -209,7 +210,7 @@ fn keyboard_movement(
         let x_axis = 0 as i8;
         let y_axis = -(down as i8) + up as i8;
 
-        let mut move_delta = vec2(x_axis as f32, y_axis as f32);
+        let mut move_delta = Vector2::new(x_axis as f32, y_axis as f32);
         if move_delta != Vector2::zeros() {
             move_delta /= move_delta.magnitude();
         }
