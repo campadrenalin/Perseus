@@ -16,6 +16,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(spawn_camera.system())
         .add_startup_system(spawn_players.system())
+        .add_startup_system(spawn_ball.system())
         .add_system(keyboard_movement.system())
         .add_system(print_positions.system())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
@@ -26,6 +27,8 @@ fn main() {
 enum EntityPrimaryTag {
     Camera,
     Player,
+    Ball,
+    // Wall,
 }
 
 #[derive(Component)]
@@ -83,9 +86,13 @@ fn spawn_player(
             },
             ..Default::default()
         })
-        .insert_bundle(RigidBodyBundle::default())
-        .insert_bundle(ColliderBundle {
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyType::KinematicVelocityBased.into(),
             position: [x, 0.0].into(),
+            ..Default::default()
+        })
+        .insert_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(sprite_size_x/40.0, sprite_size_y/40.0).into(),
             ..Default::default()
         })
         .insert(ColliderPositionSync::Discrete)
@@ -93,6 +100,39 @@ fn spawn_player(
         .insert(MoveSpeed(300.0))
         .insert(motion)
         .insert(Tag(EntityPrimaryTag::Player));
+}
+
+fn spawn_ball(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(1.0, 1.0, 1.0),
+                custom_size: Some(Vec2::new(20.0, 20.0)),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            velocity: RigidBodyVelocity {
+                linvel: Vec2::new(20.0, 1.0).into(),
+                ..Default::default()
+            }.into(),
+            ..Default::default()
+        })
+        .insert_bundle(ColliderBundle {
+            position: [0.0, 0.0].into(),
+            shape: ColliderShape::cuboid(0.5, 0.5).into(),
+            material: ColliderMaterial {
+                restitution: 1.0,
+                ..Default::default()
+            }.into(),
+            ..Default::default()
+        })
+        .insert(ColliderPositionSync::Discrete)
+        .insert(ColliderDebugRender::with_id(1))
+        .insert(MoveSpeed(100.0))
+        .insert(Tag(EntityPrimaryTag::Ball));
 }
 
 fn keyboard_movement(
