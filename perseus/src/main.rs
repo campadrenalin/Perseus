@@ -174,11 +174,15 @@ fn spawn_ball(mut commands: Commands) {
                 ..Default::default()
             }.into(),
             mass_properties: RigidBodyMassPropsFlags::ROTATION_LOCKED.into(),
+            ccd: RigidBodyCcd {
+                ccd_enabled: true,
+                ..Default::default()
+            }.into(),
             ..Default::default()
         })
         .insert_bundle(ColliderBundle {
             position: [0.0, 0.0].into(),
-            shape: ColliderShape::cuboid(ball_size_x/2.0, ball_size_y/2.0).into(),
+            shape: ColliderShape::ball(ball_size_x/2.0).into(),
             material: ColliderMaterial {
                 restitution: 1.0,
                 ..Default::default()
