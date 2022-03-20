@@ -6,6 +6,7 @@ use bevy_rapier2d::rapier::na::Vector2;
 fn vec2(x: f32, y: f32) -> Vector2<f32> { [x, y].into() }
 
 const RAPIER_SCALE:f32 = 20.0;
+const ARENA_HEIGHT:f32 = 15.0;
 
 fn main() {
     App::new()
@@ -19,6 +20,7 @@ fn main() {
         .add_startup_system(spawn_camera.system())
         .add_startup_system(spawn_players.system())
         .add_startup_system(spawn_ball.system())
+        .add_startup_system(spawn_walls.system())
         .add_system(keyboard_movement.system())
         .add_system(print_positions.system())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
@@ -30,7 +32,7 @@ enum EntityPrimaryTag {
     Camera,
     Player,
     Ball,
-    // Wall,
+    Wall,
 }
 
 #[derive(Component)]
@@ -109,6 +111,47 @@ fn spawn_player(
         .insert(MoveSpeed(30.0))
         .insert(motion)
         .insert(Tag(EntityPrimaryTag::Player));
+}
+
+fn spawn_walls(mut commands: Commands) {
+    spawn_wall(&mut commands, -ARENA_HEIGHT);
+    spawn_wall(&mut commands, ARENA_HEIGHT);
+}
+
+fn spawn_wall(commands: &mut Commands, y: f32) {
+    let wall_size_x = 80.0;
+    let wall_size_y = 2.0;
+
+    // Spawn player
+    commands
+        .spawn()
+        .insert_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.1,0.1,0.1),
+                custom_size: Some(Vec2::new(
+                    wall_size_x * RAPIER_SCALE,
+                    wall_size_y * RAPIER_SCALE
+                )),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyType::Static.into(),
+            position: [0.0, y].into(),
+            ..Default::default()
+        })
+        .insert_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(wall_size_x/2.0, wall_size_y/2.0).into(),
+            material: ColliderMaterial {
+                restitution: 1.0,
+                ..Default::default()
+            }.into(),
+            ..Default::default()
+        })
+        .insert(ColliderPositionSync::Discrete)
+        .insert(ColliderDebugRender::with_id(0))
+        .insert(Tag(EntityPrimaryTag::Wall));
 }
 
 fn spawn_ball(mut commands: Commands) {
