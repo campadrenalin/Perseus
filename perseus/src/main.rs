@@ -20,6 +20,7 @@ fn main() {
         .add_startup_system(spawn_walls.system())
         .add_system(keyboard_movement.system())
         .add_system(print_positions.system())
+        .add_system(spawn_another_ball.system())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .run();
 }
@@ -231,5 +232,14 @@ fn print_positions(
 
     for (tag, transform) in entity_info.iter() {
         println!("{:?} {}", tag.0, transform.translation);
+    }
+}
+
+fn spawn_another_ball(
+    keyboard_input: Res<Input<KeyCode>>,
+    commands: Commands,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        spawn_ball(commands);
     }
 }
