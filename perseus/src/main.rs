@@ -91,7 +91,8 @@ fn spawn_player(
             ..Default::default()
         })
         .insert_bundle(RigidBodyBundle {
-            body_type: RigidBodyType::KinematicVelocityBased.into(),
+            dominance: RigidBodyDominance(10).into(),
+            mass_properties: RigidBodyMassPropsFlags::ROTATION_LOCKED.into(),
             position: [x, 0.0].into(),
             ..Default::default()
         })
