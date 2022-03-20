@@ -5,6 +5,8 @@ use bevy_rapier2d::rapier::na::Vector2;
 // https://github.com/rust-analyzer/rust-analyzer/issues/8654
 fn vec2(x: f32, y: f32) -> Vector2<f32> { [x, y].into() }
 
+const RAPIER_SCALE:f32 = 20.0;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -37,7 +39,7 @@ struct Tag(EntityPrimaryTag);
 fn spawn_camera(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
     // Set config constants
     rapier_config.gravity = Vector2::zeros();
-    rapier_config.scale = 20.0;
+    rapier_config.scale = RAPIER_SCALE;
 
     // Actually spawn camera
     commands
@@ -72,8 +74,8 @@ fn spawn_player(
     x: f32,
     motion: KeyboardMoveable
 ) {
-    let sprite_size_x = 40.0;
-    let sprite_size_y = 400.0;
+    let player_size_x = 2.0;
+    let player_size_y = 20.0;
 
     // Spawn player
     commands
@@ -81,7 +83,10 @@ fn spawn_player(
         .insert_bundle(SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.0,0.0,0.0),
-                custom_size: Some(Vec2::new(sprite_size_x, sprite_size_y)),
+                custom_size: Some(Vec2::new(
+                    player_size_x * RAPIER_SCALE,
+                    player_size_y * RAPIER_SCALE
+                )),
                 ..Default::default()
             },
             ..Default::default()
@@ -92,23 +97,26 @@ fn spawn_player(
             ..Default::default()
         })
         .insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(sprite_size_x/40.0, sprite_size_y/40.0).into(),
+            shape: ColliderShape::cuboid(player_size_x/2.0, player_size_y/2.0).into(),
             ..Default::default()
         })
         .insert(ColliderPositionSync::Discrete)
         .insert(ColliderDebugRender::with_id(0))
-        .insert(MoveSpeed(300.0))
+        .insert(MoveSpeed(30.0))
         .insert(motion)
         .insert(Tag(EntityPrimaryTag::Player));
 }
 
 fn spawn_ball(mut commands: Commands) {
+    let ball_size_x = 1.0;
+    let ball_size_y = 1.0;
+
     commands
         .spawn()
         .insert_bundle(SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(1.0, 1.0, 1.0),
-                custom_size: Some(Vec2::new(20.0, 20.0)),
+                custom_size: Some(Vec2::new(ball_size_x * RAPIER_SCALE, ball_size_y * RAPIER_SCALE)),
                 ..Default::default()
             },
             ..Default::default()
@@ -122,7 +130,7 @@ fn spawn_ball(mut commands: Commands) {
         })
         .insert_bundle(ColliderBundle {
             position: [0.0, 0.0].into(),
-            shape: ColliderShape::cuboid(0.5, 0.5).into(),
+            shape: ColliderShape::cuboid(ball_size_x/2.0, ball_size_y/2.0).into(),
             material: ColliderMaterial {
                 restitution: 1.0,
                 ..Default::default()
@@ -137,7 +145,6 @@ fn spawn_ball(mut commands: Commands) {
 
 fn keyboard_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    rapier_parameters: Res<RapierConfiguration>,
     mut player_info: Query<(
         &MoveSpeed,
         &KeyboardMoveable,
@@ -152,7 +159,7 @@ fn keyboard_movement(
 
         let mut move_delta = vec2(x_axis as f32, y_axis as f32);
         if move_delta != Vector2::zeros() {
-            move_delta /= move_delta.magnitude() * rapier_parameters.scale;
+            move_delta /= move_delta.magnitude();
         }
 
         rb_vels.linvel = move_delta * speed.0;
